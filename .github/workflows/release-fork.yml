@@ -42,8 +42,11 @@ jobs:
             tar -C packages/opencode/dist -czf "$name.tar.gz" "$name"
           done
 
+      - name: Generate checksums
+        run: sha256sum opencode-*.tar.gz > SHA256SUMS
+
       - name: Create GitHub release
         env:
           GH_TOKEN: ${{ github.token }}
           VERSION: ${{ inputs.version }}
-        run: gh release create "v$VERSION" opencode-*.tar.gz --generate-notes --title "v$VERSION"
+        run: gh release create "v$VERSION" opencode-*.tar.gz SHA256SUMS --generate-notes --title "v$VERSION"

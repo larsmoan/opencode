@@ -49,31 +49,24 @@ This fork blocks OpenCode Zen, OpenCode Go, and Zenmux. Install releases from th
 `opencode upgrade`, the upstream install script, or the `opencode-ai` package. They install upstream OpenCode rather
 than this internal build.
 
+```bash
+curl -fsSL https://raw.githubusercontent.com/larsmoan/opencode/dev/install-safe | bash
+```
+
+The installer downloads the latest GitHub Release for this fork, verifies its SHA-256 checksum, and installs
+`opencode` in `$HOME/.local/bin` by default. Set `OPENCODE_INSTALL_DIR` to use another directory.
+
 #### Create a Release
 
 1. Open the [`release fork` workflow](https://github.com/larsmoan/opencode/actions/workflows/release-fork.yml).
 2. Select the `dev` branch and enter an internal version, such as `1.18.31-internal.1`.
 3. Run the workflow. It verifies the provider safety tests, builds the CLI archives, and creates a GitHub Release.
 
-#### Install macOS Release
-
-Replace the version with the release you created. Replace `darwin-arm64` with `darwin-x64` on Intel Macs.
+#### Verify Installation
 
 ```bash
-mkdir -p "$HOME/.local/bin"
-gh release download "v1.18.31-internal.1" \
-  --repo larsmoan/opencode \
-  --pattern "opencode-darwin-arm64.tar.gz"
-tar -xzf "opencode-darwin-arm64.tar.gz"
-install -m 755 "opencode-darwin-arm64/bin/opencode" "$HOME/.local/bin/opencode-safe"
-export PATH="$HOME/.local/bin:$PATH"
-```
-
-Verify the internal build and blocked providers:
-
-```bash
-opencode-safe --version
-opencode-safe models | rg -i 'opencode zen|opencode go|zenmux'
+opencode --version
+opencode models | rg -i 'opencode zen|opencode go|zenmux'
 ```
 
 The provider verification command must produce no output.
