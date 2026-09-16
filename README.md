@@ -43,6 +43,49 @@
 
 ---
 
+### Internal Fork Installation
+
+This fork blocks OpenCode Zen, OpenCode Go, and Zenmux. Install releases from this repository only. Do not use
+`opencode upgrade`, the upstream install script, or the `opencode-ai` package. They install upstream OpenCode rather
+than this internal build.
+
+#### Create a Release
+
+1. Open the [`release fork` workflow](https://github.com/larsmoan/opencode/actions/workflows/release-fork.yml).
+2. Select the `dev` branch and enter an internal version, such as `1.18.31-internal.1`.
+3. Run the workflow. It verifies the provider safety tests, builds the CLI archives, and creates a GitHub Release.
+
+#### Install macOS Release
+
+Replace the version with the release you created. Replace `darwin-arm64` with `darwin-x64` on Intel Macs.
+
+```bash
+mkdir -p "$HOME/.local/bin"
+gh release download "v1.18.31-internal.1" \
+  --repo larsmoan/opencode \
+  --pattern "opencode-darwin-arm64.tar.gz"
+tar -xzf "opencode-darwin-arm64.tar.gz"
+install -m 755 "opencode-darwin-arm64/bin/opencode" "$HOME/.local/bin/opencode-safe"
+export PATH="$HOME/.local/bin:$PATH"
+```
+
+Verify the internal build and blocked providers:
+
+```bash
+opencode-safe --version
+opencode-safe models | rg -i 'opencode zen|opencode go|zenmux'
+```
+
+The provider verification command must produce no output.
+
+#### Update From Upstream
+
+1. Open the [`sync upstream` workflow](https://github.com/larsmoan/opencode/actions/workflows/sync-upstream.yml).
+2. Run it with the upstream branch or tag you want to import, normally `dev`.
+3. Review the created pull request and require the `fork safety` check to pass.
+4. Merge the approved sync PR into this fork's `dev` branch.
+5. Create and install a new internal release.
+
 ### Installation
 
 ```bash
