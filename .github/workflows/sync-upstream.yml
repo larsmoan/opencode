@@ -1,0 +1,48 @@
+name: sync upstream
+
+on:
+  workflow_dispatch:
+    inputs:
+      ref:
+        description: Upstream branch or tag to merge
+        required: true
+        default: dev
+        type: string
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout fork baseline
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+        with:
+          ref: dev
+          fetch-depth: 0
+
+      - name: Merge upstream changes
+        id: sync
+        env:
+          UPSTREAM_REF: ${{ inputs.ref }}
+        run: |
+          branch="sync-upstream-$(date -u +%Y%m%d%H%M%S)"
+          git config user.name "fork sync bot"
+          git config user.email "actions@github.com"
+          git switch -c "$branch"
+          git remote add upstream https://github.com/anomalyco/opencode.git
+          git fetch upstream "$UPSTREAM_REF"
+          git merge --no-edit FETCH_HEAD
+          git push origin "$branch"
+          echo "branch=$branch" >> "$GITHUB_OUTPUT"
+
+      - name: Create review pull request
+        env:
+          GH_TOKEN: ${{ github.token }}
+          BRANCH: ${{ steps.sync.outputs.branch }}
+          UPSTREAM_REF: ${{ inputs.ref }}
+        run: >-
+          gh pr create --base dev --head "$BRANCH" --title "chore: sync upstream $UPSTREAM_REF"
+          --body "Imports upstream $UPSTREAM_REF for review. Fork safety checks must pass before merge."

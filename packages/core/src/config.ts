@@ -25,6 +25,7 @@ import { ConfigToolOutput } from "./config/tool-output"
 import { ConfigWatcher } from "./config/watcher"
 import { ConfigV1 } from "./v1/config/config"
 import { ConfigMigrateV1 } from "./v1/config/migrate"
+import { Fork } from "./fork"
 
 export class Info extends Schema.Class<Info>("Config.Info")({
   $schema: Schema.optional(Schema.String).annotate({
@@ -204,10 +205,15 @@ const layer = Layer.effect(
     // Rules use the opposite order so a user-global rule can override a
     // repository rule. Statement order inside each file stays unchanged.
     yield* policy.load(
-      configs
-        .filter((config): config is Document => config.type === "document")
-        .toReversed()
-        .flatMap((config) => config.info.experimental?.policies ?? []),
+      [
+        ...configs
+          .filter((config): config is Document => config.type === "document")
+          .toReversed()
+          .flatMap((config) => config.info.experimental?.policies ?? []),
+        ...Fork.blockedProviderIDs.map(
+          (resource) => new Policy.Info({ action: "provider.use", effect: "deny", resource }),
+        ),
+      ],
     )
 
     return Service.of({

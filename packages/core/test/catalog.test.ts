@@ -350,4 +350,38 @@ describe("CatalogV2", () => {
       expect(yield* catalog.provider.get(providerID)).toBeUndefined()
     }),
   )
+
+  it.effect("removes blocked providers and Zen endpoint aliases", () =>
+    Effect.gen(function* () {
+      const catalog = yield* Catalog.Service
+      yield* catalog.transform((editor) => {
+        editor.provider.update(ProviderV2.ID.make("opencode"), () => {})
+        editor.provider.update(ProviderV2.ID.make("renamed-zen"), (provider) => {
+          provider.api = {
+            type: "aisdk",
+            package: "@ai-sdk/openai-compatible",
+            url: "https://opencode.ai/zen/v1",
+          }
+        })
+        editor.provider.update(ProviderV2.ID.make("allowed"), (provider) => {
+          provider.api = {
+            type: "aisdk",
+            package: "@ai-sdk/openai-compatible",
+            url: "https://api.allowed.test/v1",
+          }
+        })
+        editor.model.update(ProviderV2.ID.make("allowed"), ModelV2.ID.make("renamed-zen"), (model) => {
+          model.api = {
+            id: ModelV2.ID.make("renamed-zen"),
+            type: "aisdk",
+            package: "@ai-sdk/openai-compatible",
+            url: "https://opencode.ai/zen/v1",
+          }
+        })
+      })
+
+      expect((yield* catalog.provider.all()).map((provider) => provider.id)).toEqual([ProviderV2.ID.make("allowed")])
+      expect(yield* catalog.model.get(ProviderV2.ID.make("allowed"), ModelV2.ID.make("renamed-zen"))).toBeUndefined()
+    }),
+  )
 })
