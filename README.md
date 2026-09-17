@@ -8,6 +8,15 @@
   </a>
 </p>
 <p align="center">The open source AI coding agent.</p>
+
+> [!IMPORTANT]
+> This is Lars Moan's internal safe fork of OpenCode. It blocks OpenCode Zen, OpenCode Go, and Zenmux.
+> It is not the upstream OpenCode distribution. Install releases from this repository only:
+>
+> ```bash
+> curl -fsSL https://raw.githubusercontent.com/larsmoan/opencode/dev/install-safe | bash
+> ```
+
 <p align="center">
   <a href="https://opencode.ai/discord"><img alt="Discord" src="https://img.shields.io/discord/1391832426048651334?style=flat-square&label=discord" /></a>
   <a href="https://www.npmjs.com/package/opencode-ai"><img alt="npm" src="https://img.shields.io/npm/v/opencode-ai?style=flat-square" /></a>
@@ -42,6 +51,42 @@
 [![OpenCode Terminal UI](packages/web/src/assets/lander/screenshot.png)](https://opencode.ai)
 
 ---
+
+### Internal Fork Installation
+
+This fork blocks OpenCode Zen, OpenCode Go, and Zenmux. Install releases from this repository only. Do not use
+`opencode upgrade`, the upstream install script, or the `opencode-ai` package. They install upstream OpenCode rather
+than this internal build.
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/larsmoan/opencode/dev/install-safe | bash
+```
+
+The installer downloads the latest GitHub Release for this fork, verifies its SHA-256 checksum, and installs
+`opencode` in `$HOME/.local/bin` by default. Set `OPENCODE_INSTALL_DIR` to use another directory.
+
+#### Create a Release
+
+1. Open the [`release fork` workflow](https://github.com/larsmoan/opencode/actions/workflows/release-fork.yml).
+2. Select the `dev` branch and enter an internal version, such as `1.18.31-internal.1`.
+3. Run the workflow. It verifies the provider safety tests, builds the CLI archives, and creates a GitHub Release.
+
+#### Verify Installation
+
+```bash
+opencode --version
+opencode models | rg -i 'opencode zen|opencode go|zenmux'
+```
+
+The provider verification command must produce no output.
+
+#### Update From Upstream
+
+1. Open the [`sync upstream` workflow](https://github.com/larsmoan/opencode/actions/workflows/sync-upstream.yml).
+2. Run it with the upstream branch or tag you want to import, normally `dev`.
+3. Review the created pull request and require the `fork safety` check to pass.
+4. Merge the approved sync PR into this fork's `dev` branch.
+5. Create and install a new internal release.
 
 ### Installation
 
