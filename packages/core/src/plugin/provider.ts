@@ -28,6 +28,7 @@ import { TogetherAIPlugin } from "./provider/togetherai"
 import { VercelPlugin } from "./provider/vercel"
 import { VenicePlugin } from "./provider/venice"
 import { XAIPlugin } from "./provider/xai"
+import { ZenmuxPlugin } from "./provider/zenmux"
 import type { PluginInternal } from "./internal"
 import type { Scope } from "effect"
 
@@ -63,5 +64,6 @@ export const ProviderPlugins: PluginInternal.Plugin<PluginInternal.Requirements 
   VercelPlugin,
   VenicePlugin,
   XAIPlugin,
+  ZenmuxPlugin,
   DynamicProviderPlugin,
 ]

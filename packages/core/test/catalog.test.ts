@@ -351,7 +351,7 @@ describe("CatalogV2", () => {
     }),
   )
 
-  it.effect("removes blocked providers and Zen endpoint aliases", () =>
+  it.effect("removes OpenCode Zen providers and endpoint aliases", () =>
     Effect.gen(function* () {
       const catalog = yield* Catalog.Service
       yield* catalog.transform((editor) => {
@@ -370,6 +370,20 @@ describe("CatalogV2", () => {
             url: "https://api.allowed.test/v1",
           }
         })
+        editor.provider.update(ProviderV2.ID.make("opencode-go"), (provider) => {
+          provider.api = {
+            type: "aisdk",
+            package: "@ai-sdk/openai-compatible",
+            url: "https://opencode.ai/zen/go/v1",
+          }
+        })
+        editor.provider.update(ProviderV2.ID.make("zenmux"), (provider) => {
+          provider.api = {
+            type: "aisdk",
+            package: "@ai-sdk/openai-compatible",
+            url: "https://zenmux.ai/api/v1",
+          }
+        })
         editor.model.update(ProviderV2.ID.make("allowed"), ModelV2.ID.make("renamed-zen"), (model) => {
           model.api = {
             id: ModelV2.ID.make("renamed-zen"),
@@ -380,7 +394,11 @@ describe("CatalogV2", () => {
         })
       })
 
-      expect((yield* catalog.provider.all()).map((provider) => provider.id)).toEqual([ProviderV2.ID.make("allowed")])
+      expect((yield* catalog.provider.all()).map((provider) => provider.id)).toEqual([
+        ProviderV2.ID.make("allowed"),
+        ProviderV2.ID.make("opencode-go"),
+        ProviderV2.ID.make("zenmux"),
+      ])
       expect(yield* catalog.model.get(ProviderV2.ID.make("allowed"), ModelV2.ID.make("renamed-zen"))).toBeUndefined()
     }),
   )
