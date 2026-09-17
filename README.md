@@ -1,18 +1,18 @@
-# Safe OpenCode Fork
+# OpenCode
 
-This repository is Lars Moan's internal distribution of [OpenCode](https://github.com/anomalyco/opencode), the open source AI coding agent.
+This is a fork of [OpenCode](https://github.com/anomalyco/opencode), the open source AI coding agent.
 
-It is not the upstream OpenCode distribution and is not affiliated with the OpenCode team.
+It follows upstream OpenCode while removing access to models hosted through OpenCode Zen, including its free models.
 
-## Safety Differences
+![OpenCode Terminal UI](packages/web/src/assets/lander/screenshot.png)
 
-This fork blocks these provider paths:
+## Fork Differences
 
-- OpenCode Zen (`opencode`)
-- OpenCode Go (`opencode-go`)
-- Zenmux (`zenmux`)
-
-It also blocks renamed providers and model overrides that point to OpenCode Zen or Zenmux endpoints. The model catalog is pinned into each release. The upstream self-update command is removed.
+- OpenCode Zen (`opencode`) and OpenCode Go (`opencode-go`) are unavailable.
+- Zenmux (`zenmux`) is unavailable.
+- Provider aliases and model overrides cannot point to OpenCode Zen or Zenmux endpoints.
+- The model catalog is pinned into each release.
+- Upstream self-updates are removed. Install and update from this repository's releases.
 
 ## Install
 
@@ -24,7 +24,7 @@ curl -fsSL https://raw.githubusercontent.com/larsmoan/opencode/dev/install-safe 
 
 The installer verifies the release SHA-256 checksum and installs `opencode` to `$HOME/.local/bin` by default. Set `OPENCODE_INSTALL_DIR` to choose another destination.
 
-Do not use `opencode upgrade`, `https://opencode.ai/install`, or the `opencode-ai` package. They install upstream OpenCode, not this fork.
+Do not use `opencode upgrade`, `https://opencode.ai/install`, or the `opencode-ai` package. They install upstream OpenCode instead of this fork.
 
 Verify the installed catalog does not expose blocked providers:
 
