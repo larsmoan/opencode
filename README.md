@@ -8,6 +8,15 @@
   </a>
 </p>
 <p align="center">The open source AI coding agent.</p>
+
+> [!IMPORTANT]
+> This is Lars Moan's internal safe fork of OpenCode. It blocks OpenCode Zen, OpenCode Go, and Zenmux.
+> It is not the upstream OpenCode distribution. Install releases from this repository only:
+>
+> ```bash
+> curl -fsSL https://raw.githubusercontent.com/larsmoan/opencode/dev/install-safe | bash
+> ```
+
 <p align="center">
   <a href="https://opencode.ai/discord"><img alt="Discord" src="https://img.shields.io/discord/1391832426048651334?style=flat-square&label=discord" /></a>
   <a href="https://www.npmjs.com/package/opencode-ai"><img alt="npm" src="https://img.shields.io/npm/v/opencode-ai?style=flat-square" /></a>
