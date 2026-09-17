@@ -1,12 +1,18 @@
 name: release fork
 
 on:
+  push:
+    branches: [dev]
   workflow_dispatch:
     inputs:
       version:
         description: Release version, without v prefix
-        required: true
+        required: false
         type: string
+
+concurrency:
+  group: release-fork
+  cancel-in-progress: false
 
 permissions:
   contents: write
@@ -18,7 +24,7 @@ jobs:
       - name: Checkout release source
         uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
         with:
-          ref: dev
+          ref: ${{ github.sha }}
           fetch-depth: 0
 
       - name: Setup Bun
@@ -28,11 +34,19 @@ jobs:
         working-directory: packages/core
         run: bun test test/models.test.ts test/catalog.test.ts test/config/config.test.ts
 
+      - name: Determine release version
+        id: version
+        env:
+          INPUT_VERSION: ${{ inputs.version }}
+        run: |
+          version="${INPUT_VERSION:-$(bun -e 'import pkg from "./packages/opencode/package.json" with { type: "json" }; console.log(`${pkg.version}-internal.${process.env.GITHUB_RUN_NUMBER}`)')}"
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+
       - name: Build CLI artifacts
         working-directory: packages/opencode
         run: bun run script/build.ts
         env:
-          OPENCODE_VERSION: ${{ inputs.version }}
+          OPENCODE_VERSION: ${{ steps.version.outputs.version }}
           OPENCODE_CHANNEL: internal
 
       - name: Archive CLI artifacts
@@ -48,5 +62,5 @@ jobs:
       - name: Create GitHub release
         env:
           GH_TOKEN: ${{ github.token }}
-          VERSION: ${{ inputs.version }}
+          VERSION: ${{ steps.version.outputs.version }}
         run: gh release create "v$VERSION" opencode-*.tar.gz SHA256SUMS --generate-notes --title "v$VERSION"
