@@ -32,7 +32,7 @@ jobs:
       - name: Merge upstream changes
         id: sync
         env:
-          GH_TOKEN: ${{ github.token }}
+          GH_TOKEN: ${{ secrets.UPSTREAM_SYNC_TOKEN }}
           UPSTREAM_REF: ${{ inputs.ref || 'dev' }}
         run: |
           if gh pr list --base dev --state open --json headRefName --jq '[.[] | select(.headRefName | startswith("sync-upstream-"))] | length > 0' | grep -qx true; then
@@ -58,7 +58,7 @@ jobs:
       - name: Create review pull request
         if: steps.sync.outputs.skip != 'true'
         env:
-          GH_TOKEN: ${{ github.token }}
+          GH_TOKEN: ${{ secrets.UPSTREAM_SYNC_TOKEN }}
           BRANCH: ${{ steps.sync.outputs.branch }}
           UPSTREAM_REF: ${{ inputs.ref }}
         run: >-
