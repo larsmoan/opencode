@@ -78,6 +78,20 @@ const fixtureWithBlockedProvider: Record<string, ModelsDev.Provider> = {
     api: "https://opencode.ai/zen/v1",
     models: {},
   },
+  "opencode-go": {
+    id: "opencode-go",
+    name: "OpenCode Go",
+    env: ["OPENCODE_API_KEY"],
+    api: "https://opencode.ai/zen/go/v1",
+    models: {},
+  },
+  zenmux: {
+    id: "zenmux",
+    name: "Zenmux",
+    env: ["ZENMUX_API_KEY"],
+    api: "https://zenmux.ai/api/v1",
+    models: {},
+  },
 }
 
 interface MockState {
@@ -152,7 +166,7 @@ describe("ModelsDev Service", () => {
     }),
   )
 
-  it.live("filters blocked providers from configured catalog data", () =>
+  it.live("filters OpenCode Zen but preserves deliberately configured providers", () =>
     Effect.gen(function* () {
       yield* writeCache(fixtureWithBlockedProvider)
       const state = yield* Ref.make(initialState)
@@ -160,7 +174,11 @@ describe("ModelsDev Service", () => {
         state,
         ModelsDev.Service.use((s) => s.get()),
       )
-      expect(result).toEqual(fixture)
+      expect(result).toEqual({
+        ...fixture,
+        "opencode-go": fixtureWithBlockedProvider["opencode-go"],
+        zenmux: fixtureWithBlockedProvider.zenmux,
+      })
     }),
   )
 
