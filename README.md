@@ -82,11 +82,13 @@ The provider verification command must produce no output.
 
 #### Update From Upstream
 
-1. Open the [`sync upstream` workflow](https://github.com/larsmoan/opencode/actions/workflows/sync-upstream.yml).
-2. Run it with the upstream branch or tag you want to import, normally `dev`.
-3. Review the created pull request and require the `fork safety` check to pass.
-4. Merge the approved sync PR into this fork's `dev` branch.
-5. Create and install a new internal release.
+The [`sync upstream` workflow](https://github.com/larsmoan/opencode/actions/workflows/sync-upstream.yml) runs every Monday at 07:00 UTC. It creates a pull request only when upstream `dev` has changes and no earlier sync PR is open. It never merges or releases automatically.
+
+1. Review the created pull request and require the `fork safety` check to pass.
+2. Merge the approved sync PR into this fork's `dev` branch.
+3. Create and install a new internal release.
+
+Run the workflow manually to import another upstream branch or tag.
 
 ### Installation
 
