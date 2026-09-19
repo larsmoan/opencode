@@ -3,6 +3,56 @@ name: release fork
 on:
   push:
     branches: [dev]
+    paths-ignore:
+      # CI/CD
+      - ".github/**"
+      # GitHub Action source, released separately by release-github-action.yml
+      - "github/**"
+      # VS Code extension, published via vscode-v* tags
+      - "sdks/**"
+      # Cloud infrastructure and internal services, not part of the CLI release
+      - "infra/**"
+      - "sst.config.ts"
+      - "sst-env.d.ts"
+      # Monorepo packages outside the CLI dependency closure
+      - "packages/app/**"
+      - "packages/cli/**"
+      - "packages/client/**"
+      - "packages/console/**"
+      - "packages/containers/**"
+      - "packages/desktop/**"
+      - "packages/docs/**"
+      - "packages/enterprise/**"
+      - "packages/function/**"
+      - "packages/httpapi-codegen/**"
+      - "packages/identity/**"
+      - "packages/sdk-next/**"
+      - "packages/session-ui/**"
+      - "packages/slack/**"
+      - "packages/stats/**"
+      - "packages/storybook/**"
+      - "packages/web/**"
+      # Documentation and specs
+      - "*.md"
+      - "specs/**"
+      # Nix packaging, built by the upstream nix workflows
+      - "nix/**"
+      - "flake.nix"
+      - "flake.lock"
+      # Editor, agent, and repo tooling configuration
+      - ".husky/**"
+      - ".opencode/**"
+      - ".vscode/**"
+      - ".zed/**"
+      - ".editorconfig"
+      - ".gitattributes"
+      - ".gitleaksignore"
+      - ".gitignore"
+      - ".prettierignore"
+      - ".oxlintrc.json"
+      - ".dockerignore"
+      - "perf/**"
+      - "screenshot-*.png"
   workflow_dispatch:
     inputs:
       version:
