@@ -71,5 +71,5 @@ jobs:
           UPSTREAM_REF: ${{ inputs.ref }}
           CONFLICTS: ${{ steps.sync.outputs.conflicts }}
         run: >-
-          if [ "$CONFLICTS" = "true" ]; then body="Imports upstream $UPSTREAM_REF. This branch has conflicts with dev. Resolve by merging dev into this branch locally, then push."; else body="Imports upstream $UPSTREAM_REF for review. Fork safety checks must pass before merge."; fi;
+          if [ "$CONFLICTS" = "true" ]; then body="Imports upstream $UPSTREAM_REF. This branch has conflicts with dev. Comment \`/opencode merge dev into this branch, resolve the conflicts, and push the result\` to have OpenCode resolve them."; else body="Imports upstream $UPSTREAM_REF for review. Fork safety checks must pass before merge."; fi;
           gh pr create --base dev --head "$BRANCH" --title "chore: sync upstream $UPSTREAM_REF" --body "$body"
