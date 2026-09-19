@@ -56,7 +56,7 @@ jobs:
             echo "conflicts=false" >> "$GITHUB_OUTPUT"
           else
             git merge --abort
-            git commit --allow-empty -m "chore: upstream merge has conflicts; resolve manually"
+            git reset --hard FETCH_HEAD
             echo "conflicts=true" >> "$GITHUB_OUTPUT"
           fi
           git push origin "$branch"
@@ -71,5 +71,5 @@ jobs:
           UPSTREAM_REF: ${{ inputs.ref }}
           CONFLICTS: ${{ steps.sync.outputs.conflicts }}
         run: >-
-          if [ "$CONFLICTS" = "true" ]; then body="Imports upstream $UPSTREAM_REF. This PR has merge conflicts and cannot be merged until they are resolved locally."; else body="Imports upstream $UPSTREAM_REF for review. Fork safety checks must pass before merge."; fi;
+          if [ "$CONFLICTS" = "true" ]; then body="Imports upstream $UPSTREAM_REF. This branch has conflicts with dev. Resolve by merging dev into this branch locally, then push."; else body="Imports upstream $UPSTREAM_REF for review. Fork safety checks must pass before merge."; fi;
           gh pr create --base dev --head "$BRANCH" --title "chore: sync upstream $UPSTREAM_REF" --body "$body"
