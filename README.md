@@ -42,4 +42,5 @@ This command must produce no output.
 
 The sync workflow never merges or releases automatically.
 
+- Test line for opencode action verification
 - Another test line for opencode action verification
