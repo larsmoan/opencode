@@ -52,7 +52,13 @@ jobs:
           git config user.name "fork sync bot"
           git config user.email "actions@github.com"
           git switch -c "$branch"
-          git merge --no-edit FETCH_HEAD
+          if git merge --no-edit FETCH_HEAD; then
+            echo "conflicts=false" >> "$GITHUB_OUTPUT"
+          else
+            git merge --abort
+            git commit --allow-empty -m "chore: upstream merge has conflicts; resolve manually"
+            echo "conflicts=true" >> "$GITHUB_OUTPUT"
+          fi
           git push origin "$branch"
           echo "branch=$branch" >> "$GITHUB_OUTPUT"
 
@@ -63,6 +69,7 @@ jobs:
           GH_REPO: ${{ github.repository }}
           BRANCH: ${{ steps.sync.outputs.branch }}
           UPSTREAM_REF: ${{ inputs.ref }}
+          CONFLICTS: ${{ steps.sync.outputs.conflicts }}
         run: >-
-          gh pr create --base dev --head "$BRANCH" --title "chore: sync upstream $UPSTREAM_REF"
-          --body "Imports upstream $UPSTREAM_REF for review. Fork safety checks must pass before merge."
+          if [ "$CONFLICTS" = "true" ]; then body="Imports upstream $UPSTREAM_REF. This PR has merge conflicts and cannot be merged until they are resolved locally."; else body="Imports upstream $UPSTREAM_REF for review. Fork safety checks must pass before merge."; fi;
+          gh pr create --base dev --head "$BRANCH" --title "chore: sync upstream $UPSTREAM_REF" --body "$body"
