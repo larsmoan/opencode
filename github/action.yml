@@ -50,7 +50,8 @@ runs:
 
     - name: Cache opencode
       id: cache
-      uses: actions/cache@v4
+      if: github.event_name != 'issue_comment' && github.event_name != 'pull_request_review_comment'
+      uses: actions/cache@cdf6c1fa76f9f475f3d7449005a359c84ca0f306 # v5.0.3
       with:
         path: ~/.opencode/bin
         key: opencode-${{ runner.os }}-${{ runner.arch }}-${{ steps.version.outputs.version }}
