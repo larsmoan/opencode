@@ -34,4 +34,4 @@ jobs:
           OPENCODE_API_KEY: ${{ secrets.OPENCODE_API_KEY }}
           OPENCODE_PERMISSION: '{"bash": {"git *": "allow", "gh pr *": "allow"}}'
         with:
-          model: opencode/claude-opus-4-5
+          model: opencode/glm-5.3
