@@ -41,3 +41,5 @@ This command must produce no output.
 - Run [`release fork`](https://github.com/larsmoan/opencode/actions/workflows/release-fork.yml) after approved changes reach `dev`.
 
 The sync workflow never merges or releases automatically.
+
+- Test line for opencode action verification
