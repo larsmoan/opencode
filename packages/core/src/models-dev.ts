@@ -11,6 +11,7 @@ import { InstallationChannel, InstallationVersion } from "./installation/version
 import { EventV2 } from "./event"
 import { makeGlobalNode } from "./effect/app-node"
 import { httpClient } from "./effect/app-node-platform"
+import { Fork } from "./fork"
 
 export const CatalogModelStatus = Schema.Literals(["alpha", "beta", "deprecated"])
 export type CatalogModelStatus = typeof CatalogModelStatus.Type
@@ -199,6 +200,9 @@ const layer = Layer.effect(
       typeof OPENCODE_MODELS_DEV === "undefined" ? undefined : OPENCODE_MODELS_DEV,
     )
 
+    const filterBlockedProviders = (data: Record<string, Provider>) =>
+      Object.fromEntries(Object.entries(data).filter(([id, provider]) => !Fork.isBlockedProvider(id) && !Fork.isBlockedEndpoint(provider.api)))
+
     const fetchAndWrite = Effect.fn("ModelsDev.fetchAndWrite")(function* () {
       const text = yield* fetchApi()
       const tempfile = `${filepath}.${process.pid}.${Date.now()}.tmp`
@@ -215,10 +219,13 @@ const layer = Layer.effect(
     })
 
     const populate = Effect.gen(function* () {
-      const fromDisk = yield* loadFromDisk
-      if (fromDisk) return fromDisk
       const snapshot = yield* loadSnapshot
-      if (snapshot) return snapshot
+      if (Flag.OPENCODE_DISABLE_MODELS_FETCH && Flag.OPENCODE_MODELS_PATH === undefined && snapshot) {
+        return filterBlockedProviders(snapshot)
+      }
+      const fromDisk = yield* loadFromDisk
+      if (fromDisk) return filterBlockedProviders(fromDisk)
+      if (snapshot) return filterBlockedProviders(snapshot)
       if (Flag.OPENCODE_DISABLE_MODELS_FETCH) return {}
       // Flock is cross-process: concurrent opencode CLIs can race on this cache file.
       const text = yield* Effect.scoped(
@@ -227,7 +234,7 @@ const layer = Layer.effect(
           return yield* fetchAndWrite()
         }),
       )
-      return JSON.parse(text) as Record<string, Provider>
+      return filterBlockedProviders(JSON.parse(text) as Record<string, Provider>)
     }).pipe(Effect.withSpan("ModelsDev.populate"), Effect.orDie)
 
     const [cachedGet, invalidate] = yield* Effect.cachedInvalidateWithTTL(populate, Duration.infinity)
@@ -235,6 +242,7 @@ const layer = Layer.effect(
     const get = (): Effect.Effect<Record<string, Provider>> => cachedGet
 
     const refresh = Effect.fn("ModelsDev.refresh")(function* (force = false) {
+      if (Flag.OPENCODE_DISABLE_MODELS_FETCH) return
       if (!force && (yield* fresh())) return
       yield* Effect.scoped(
         Effect.gen(function* () {

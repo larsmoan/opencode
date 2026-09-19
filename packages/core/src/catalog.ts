@@ -9,6 +9,7 @@ import { EventV2 } from "./event"
 import { Policy } from "./policy"
 import { State } from "./state"
 import { Integration } from "./integration"
+import { Fork } from "./fork"
 
 export type ProviderRecord = {
   provider: ProviderV2.MutableInfo
@@ -158,11 +159,16 @@ const layer = Layer.effect(
         return result
       },
       finalize: Effect.fn("CatalogV2.finalize")(function* (catalog) {
-        if (policy.hasStatements()) {
-          for (const record of [...catalog.provider.list()]) {
-            if ((yield* policy.evaluate("provider.use", record.provider.id, "allow")) === "deny") {
-              catalog.provider.remove(record.provider.id)
-            }
+        for (const record of [...catalog.provider.list()]) {
+          if (Fork.isBlockedProvider(record.provider.id) || Fork.isBlockedEndpoint(record.provider.api.url)) {
+            catalog.provider.remove(record.provider.id)
+            continue
+          }
+          for (const model of record.models.values()) {
+            if (Fork.isBlockedEndpoint(model.api.url)) catalog.model.remove(record.provider.id, model.id)
+          }
+          if (policy.hasStatements() && (yield* policy.evaluate("provider.use", record.provider.id, "allow")) === "deny") {
+            catalog.provider.remove(record.provider.id)
           }
         }
         yield* events.publish(Event.Updated, {})

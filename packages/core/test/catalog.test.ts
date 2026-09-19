@@ -350,4 +350,56 @@ describe("CatalogV2", () => {
       expect(yield* catalog.provider.get(providerID)).toBeUndefined()
     }),
   )
+
+  it.effect("removes OpenCode Zen providers and endpoint aliases", () =>
+    Effect.gen(function* () {
+      const catalog = yield* Catalog.Service
+      yield* catalog.transform((editor) => {
+        editor.provider.update(ProviderV2.ID.make("opencode"), () => {})
+        editor.provider.update(ProviderV2.ID.make("renamed-zen"), (provider) => {
+          provider.api = {
+            type: "aisdk",
+            package: "@ai-sdk/openai-compatible",
+            url: "https://opencode.ai/zen/v1",
+          }
+        })
+        editor.provider.update(ProviderV2.ID.make("allowed"), (provider) => {
+          provider.api = {
+            type: "aisdk",
+            package: "@ai-sdk/openai-compatible",
+            url: "https://api.allowed.test/v1",
+          }
+        })
+        editor.provider.update(ProviderV2.ID.make("opencode-go"), (provider) => {
+          provider.api = {
+            type: "aisdk",
+            package: "@ai-sdk/openai-compatible",
+            url: "https://opencode.ai/zen/go/v1",
+          }
+        })
+        editor.provider.update(ProviderV2.ID.make("zenmux"), (provider) => {
+          provider.api = {
+            type: "aisdk",
+            package: "@ai-sdk/openai-compatible",
+            url: "https://zenmux.ai/api/v1",
+          }
+        })
+        editor.model.update(ProviderV2.ID.make("allowed"), ModelV2.ID.make("renamed-zen"), (model) => {
+          model.api = {
+            id: ModelV2.ID.make("renamed-zen"),
+            type: "aisdk",
+            package: "@ai-sdk/openai-compatible",
+            url: "https://opencode.ai/zen/v1",
+          }
+        })
+      })
+
+      expect((yield* catalog.provider.all()).map((provider) => provider.id)).toEqual([
+        ProviderV2.ID.make("allowed"),
+        ProviderV2.ID.make("opencode-go"),
+        ProviderV2.ID.make("zenmux"),
+      ])
+      expect(yield* catalog.model.get(ProviderV2.ID.make("allowed"), ModelV2.ID.make("renamed-zen"))).toBeUndefined()
+    }),
+  )
 })

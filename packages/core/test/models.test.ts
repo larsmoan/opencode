@@ -69,6 +69,31 @@ const fixture2: Record<string, ModelsDev.Provider> = {
   },
 }
 
+const fixtureWithBlockedProvider: Record<string, ModelsDev.Provider> = {
+  ...fixture,
+  opencode: {
+    id: "opencode",
+    name: "OpenCode Zen",
+    env: ["OPENCODE_API_KEY"],
+    api: "https://opencode.ai/zen/v1",
+    models: {},
+  },
+  "opencode-go": {
+    id: "opencode-go",
+    name: "OpenCode Go",
+    env: ["OPENCODE_API_KEY"],
+    api: "https://opencode.ai/zen/go/v1",
+    models: {},
+  },
+  zenmux: {
+    id: "zenmux",
+    name: "Zenmux",
+    env: ["ZENMUX_API_KEY"],
+    api: "https://zenmux.ai/api/v1",
+    models: {},
+  },
+}
+
 interface MockState {
   body: string
   status: number
@@ -138,6 +163,22 @@ describe("ModelsDev Service", () => {
       expect(result).toEqual(fixture)
       const final = yield* Ref.get(state)
       expect(final.calls).toEqual([])
+    }),
+  )
+
+  it.live("filters OpenCode Zen but preserves deliberately configured providers", () =>
+    Effect.gen(function* () {
+      yield* writeCache(fixtureWithBlockedProvider)
+      const state = yield* Ref.make(initialState)
+      const result = yield* provided(
+        state,
+        ModelsDev.Service.use((s) => s.get()),
+      )
+      expect(result).toEqual({
+        ...fixture,
+        "opencode-go": fixtureWithBlockedProvider["opencode-go"],
+        zenmux: fixtureWithBlockedProvider.zenmux,
+      })
     }),
   )
 
@@ -213,7 +254,7 @@ describe("ModelsDev Service", () => {
     }),
   )
 
-  it.live("refresh(true) fetches via HttpClient and updates the cache", () =>
+  it.live("refresh(true) does not change the pinned catalog", () =>
     Effect.gen(function* () {
       yield* writeCache(fixture)
       const state = yield* Ref.make({ ...initialState, body: JSON.stringify(fixture2) })
@@ -228,11 +269,9 @@ describe("ModelsDev Service", () => {
         }),
       )
       expect(result.before).toEqual(fixture)
-      expect(result.after).toEqual(fixture2)
+      expect(result.after).toEqual(fixture)
       const final = yield* Ref.get(state)
-      expect(final.calls.length).toBe(1)
-      expect(final.calls[0].url).toContain("/api.json")
-      expect(final.calls[0].userAgent).toContain("/cli")
+      expect(final.calls).toEqual([])
     }),
   )
 
@@ -250,7 +289,7 @@ describe("ModelsDev Service", () => {
     }),
   )
 
-  it.live("refresh(false) fetches when on-disk file is stale", () =>
+  it.live("refresh(false) does not fetch when on-disk file is stale", () =>
     Effect.gen(function* () {
       // Stale: mtime 10 minutes ago, beyond the 5-minute TTL.
       yield* writeCache(fixture, Date.now() - 10 * 60 * 1000)
@@ -264,12 +303,12 @@ describe("ModelsDev Service", () => {
         }),
       )
       const final = yield* Ref.get(state)
-      expect(final.calls.length).toBe(1)
-      expect(after).toEqual(fixture2)
+      expect(final.calls).toEqual([])
+      expect(after).toEqual(fixture)
     }),
   )
 
-  it.live("refresh swallows HTTP errors and leaves cache intact", () =>
+  it.live("refresh ignores unavailable remote catalogs", () =>
     Effect.gen(function* () {
       yield* writeCache(fixture)
       const state = yield* Ref.make({ ...initialState, status: 500, body: "boom" })
@@ -282,9 +321,8 @@ describe("ModelsDev Service", () => {
         }),
       )
       expect(result).toEqual(fixture)
-      // retryTransient retries 5xx, so calls may be > 1.
       const final = yield* Ref.get(state)
-      expect(final.calls.length).toBeGreaterThanOrEqual(1)
+      expect(final.calls).toEqual([])
     }),
   )
 })

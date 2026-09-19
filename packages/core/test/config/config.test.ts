@@ -724,6 +724,28 @@ describe("Config", () => {
     ),
   )
 
+  it.live("does not allow configured policy to re-enable blocked providers", () =>
+    Effect.acquireRelease(
+      Effect.promise(() => tmpdir()),
+      (tmp) => Effect.promise(() => tmp[Symbol.asyncDispose]()),
+    ).pipe(
+      Effect.flatMap((tmp) =>
+        Effect.gen(function* () {
+          yield* Effect.promise(() =>
+            fs.writeFile(
+              path.join(tmp.path, "opencode.json"),
+              JSON.stringify({
+                experimental: { policies: [{ effect: "allow", action: "provider.use", resource: "opencode" }] },
+              }),
+            ),
+          )
+          const policy = yield* Policy.Service
+          expect(yield* policy.evaluate("provider.use", "opencode", "allow")).toBe("deny")
+        }).pipe(Effect.provide(testLayer(tmp.path))),
+      ),
+    ),
+  )
+
   it.live("loads global, ancestor, and .opencode configuration up to the project boundary", () =>
     Effect.acquireRelease(
       Effect.promise(() => tmpdir()),
